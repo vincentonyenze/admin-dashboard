@@ -1,0 +1,14 @@
+{
+  "name": "admin-dashboard",
+  "version": "1.0.0",
+  "description": "The shop's back office: sales stats, hand-drawn charts and a sortable orders table.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node scripts/generate-orders.mjs",
+    "test": "node --test",
+    "test:watch": "node --test --watch"
+  },
+  "author": "Vinco Dev",
+  "license": "MIT"
+}
