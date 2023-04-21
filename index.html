@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overview – Shop Admin</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="app">
+    <!-- ===== Sidebar navigation ===== -->
+    <!-- On phones it slides in from the left (Step 15) -->
+    <nav id="sidebar" class="sidebar" aria-label="Main">
+      <a href="./" class="sidebar__logo">🛍️ <span>Shop</span> Admin</a>
+      <ul class="sidebar__links">
+        <!-- aria-current="page": "you are here" for screen readers (and the CSS) -->
+        <li><a href="#overview" class="sidebar__link" aria-current="page"><span aria-hidden="true">📊</span> Overview</a></li>
+        <li><a href="#sales" class="sidebar__link"><span aria-hidden="true">📈</span> Sales</a></li>
+        <li><a href="#products" class="sidebar__link"><span aria-hidden="true">📦</span> Products</a></li>
+        <li><a href="#orders" class="sidebar__link"><span aria-hidden="true">🧾</span> Orders</a></li>
+      </ul>
+      <p class="sidebar__note">Practice dashboard with generated data</p>
+    </nav>
+
+    <!-- ===== Top bar ===== -->
+    <header class="topbar">
+      <button type="button" id="menu-btn" class="icon-btn topbar__menu"
+              aria-controls="sidebar" aria-expanded="false" aria-label="Open menu">☰</button>
+      <div class="topbar__titles">
+        <h1 class="topbar__title">Overview</h1>
+        <!-- "Data up to 30 Sep 2026" -->
+        <p id="data-note" class="topbar__note"></p>
+      </div>
+
+      <!-- Which period every number on the page is about -->
+      <div class="range" role="group" aria-label="Date range">
+        <button type="button" class="range__btn" data-range="7" aria-pressed="false">7 days</button>
+        <button type="button" class="range__btn" data-range="30" aria-pressed="true">30 days</button>
+        <button type="button" class="range__btn" data-range="90" aria-pressed="false">90 days</button>
+        <button type="button" class="range__btn" data-range="365" aria-pressed="false">12 months</button>
+      </div>
+    </header>
+
+    <main id="main" class="main" tabindex="-1">
+      <!-- ===== Stat cards ===== -->
+      <section id="overview" class="stats" aria-label="Key numbers">
+        <!-- One card per number. data-metric says which; JavaScript fills it in.
+             The <svg> is a tiny "sparkline": the trend, with no axes. -->
+        <article class="stat-card" data-metric="revenue">
+          <h2 class="stat-card__label">Revenue</h2>
+          <p class="stat-card__value">–</p>
+          <p class="stat-card__change"></p>
+          <svg class="stat-card__spark" aria-hidden="true"></svg>
+        </article>
+        <article class="stat-card" data-metric="orders">
+          <h2 class="stat-card__label">Orders</h2>
+          <p class="stat-card__value">–</p>
+          <p class="stat-card__change"></p>
+          <svg class="stat-card__spark" aria-hidden="true"></svg>
+        </article>
+        <article class="stat-card" data-metric="averageOrder">
+          <h2 class="stat-card__label">Average order</h2>
+          <p class="stat-card__value">–</p>
+          <p class="stat-card__change"></p>
+          <svg class="stat-card__spark" aria-hidden="true"></svg>
+        </article>
+        <article class="stat-card" data-metric="refundRate">
+          <h2 class="stat-card__label">Refunds &amp; cancellations</h2>
+          <p class="stat-card__value">–</p>
+          <p class="stat-card__change"></p>
+          <svg class="stat-card__spark" aria-hidden="true"></svg>
+        </article>
+      </section>
+
+      <!-- ===== Charts ===== -->
+      <section id="sales" class="charts" aria-label="Sales charts">
+        <article class="card card--wide">
+          <header class="card__header">
+            <h2 class="card__title" id="revenue-title">Revenue over time</h2>
+            <p id="revenue-subtitle" class="card__subtitle"></p>
+          </header>
+          <!-- role="img" + a label: screen readers treat the chart as one
+               picture and hear its summary, instead of every line in it -->
+          <div class="chart">
+            <svg id="revenue-chart" class="chart__svg" role="img" aria-labelledby="revenue-title revenue-summary"></svg>
+            <!-- The box that follows the mouse (or keyboard) over the chart -->
+            <div id="revenue-tooltip" class="tooltip" hidden></div>
+          </div>
+          <p id="revenue-summary" class="visually-hidden"></p>
+          <!-- The same numbers as a table: for screen readers, and for anyone
+               who wants exact figures. <details> starts closed. -->
+          <details class="data-table">
+            <summary>Show as a table</summary>
+            <table id="revenue-table"></table>
+          </details>
+        </article>
+
+        <article class="card">
+          <header class="card__header">
+            <h2 class="card__title" id="category-title">Sales by category</h2>
+            <p class="card__subtitle">Share of revenue</p>
+          </header>
+          <div class="chart">
+            <svg id="category-chart" class="chart__svg chart__svg--bars" role="img" aria-labelledby="category-title category-summary"></svg>
+          </div>
+          <p id="category-summary" class="visually-hidden"></p>
+          <details class="data-table">
+            <summary>Show as a table</summary>
+            <table id="category-table"></table>
+          </details>
+        </article>
+      </section>
+
+      <!-- ===== Product lists ===== -->
+      <section id="products" class="lists" aria-label="Products">
+        <article class="card">
+          <header class="card__header">
+            <h2 class="card__title">Top products</h2>
+            <p class="card__subtitle">By revenue in this period</p>
+          </header>
+          <!-- <ol>: an ordered list, because the order (the ranking) matters -->
+          <ol id="top-products" class="product-list"></ol>
+        </article>
+
+        <article class="card">
+          <header class="card__header">
+            <h2 class="card__title">Low stock</h2>
+            <p class="card__subtitle">5 or fewer left</p>
+          </header>
+          <ul id="low-stock" class="product-list"></ul>
+        </article>
+      </section>
+
+      <!-- ===== Orders table ===== -->
+      <section id="orders" class="card orders" aria-labelledby="orders-title">
+        <header class="card__header orders__header">
+          <div>
+            <h2 class="card__title" id="orders-title">Orders</h2>
+            <p id="orders-count" class="card__subtitle" aria-live="polite"></p>
+          </div>
+
+          <form id="orders-filters" class="orders__filters" role="search">
+            <label class="visually-hidden" for="orders-search">Search orders</label>
+            <input type="search" id="orders-search" class="input" name="search"
+                   placeholder="Order number, customer or email…" autocomplete="off">
+
+            <label class="visually-hidden" for="orders-status">Status</label>
+            <select id="orders-status" class="input" name="status">
+              <option value="">All statuses</option>
+              <option value="processing">Processing</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+              <option value="refunded">Refunded</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </form>
+        </header>
+
+        <!-- The wrapper scrolls sideways if the table is wider than the screen -->
+        <div class="table-wrap">
+          <table class="table">
+            <caption class="visually-hidden">Orders in the selected period</caption>
+            <thead>
+              <tr>
+                <!-- A sortable column: a button inside the heading.
+                     aria-sort on the <th> says how it's sorted now. -->
+                <th scope="col" aria-sort="none"><button type="button" class="sort-btn" data-sort="id">Order</button></th>
+                <th scope="col" aria-sort="descending"><button type="button" class="sort-btn" data-sort="date">Date</button></th>
+                <th scope="col" aria-sort="none"><button type="button" class="sort-btn" data-sort="customer">Customer</button></th>
+                <th scope="col">Items</th>
+                <th scope="col" aria-sort="none"><button type="button" class="sort-btn" data-sort="status">Status</button></th>
+                <th scope="col" class="table__num" aria-sort="none"><button type="button" class="sort-btn" data-sort="total">Total</button></th>
+              </tr>
+            </thead>
+            <tbody id="orders-body"></tbody>
+          </table>
+        </div>
+
+        <p id="orders-empty" class="orders__empty" hidden>No orders match these filters.</p>
+        <nav id="orders-pagination" class="pagination" aria-label="Orders pages"></nav>
+      </section>
+    </main>
+  </div>
+
+  <!-- ===== One order's details ===== -->
+  <dialog id="order-dialog" class="order-dialog" aria-labelledby="order-dialog-title">
+    <header class="order-dialog__header">
+      <h2 id="order-dialog-title" class="order-dialog__title"></h2>
+      <button type="button" id="order-dialog-close" class="icon-btn" aria-label="Close">✕</button>
+    </header>
+    <div id="order-dialog-body" class="order-dialog__body"></div>
+  </dialog>
+</body>
+</html>
