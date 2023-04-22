@@ -1,0 +1,850 @@
+/* ===== Design tokens ===== */
+:root {
+  --color-bg: #f4f6fa;
+  --color-surface: #ffffff;
+  --color-sidebar: #111827;
+  --color-sidebar-text: #cbd2dd;
+  --color-text: #161b26;
+  --color-muted: #667085;
+  --color-border: #e4e7ec;
+  --color-primary: #4f6bed;
+  --color-primary-soft: #eef1fd;
+  --color-up: #12805c; /* a number going the good way */
+  --color-down: #d92d20; /* ...and the bad way */
+  --color-chart: #4f6bed;
+  --color-chart-fill: rgba(79, 107, 237, 0.12);
+  --color-grid: #eef0f4;
+
+  /* Order status colours: [background, text] */
+  --status-processing-bg: #fff4e5;
+  --status-processing: #a15c07;
+  --status-shipped-bg: #e8f0fe;
+  --status-shipped: #1f56c4;
+  --status-delivered-bg: #e7f6ef;
+  --status-delivered: #0e7050;
+  --status-refunded-bg: #f2f4f7;
+  --status-refunded: #475467;
+  --status-cancelled-bg: #fdecec;
+  --status-cancelled: #b42318;
+
+  --radius: 14px;
+  --radius-small: 8px;
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.08);
+  --sidebar-width: 240px;
+  --topbar-height: 72px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0d1017;
+    --color-surface: #161b25;
+    --color-sidebar: #0a0d13;
+    --color-text: #e8eaef;
+    --color-muted: #98a2b3;
+    --color-border: #262c38;
+    --color-primary: #7c93ff;
+    --color-primary-soft: #1d2540;
+    --color-up: #3ccb94;
+    --color-down: #ff7066;
+    --color-chart: #7c93ff;
+    --color-chart-fill: rgba(124, 147, 255, 0.16);
+    --color-grid: #212734;
+
+    --status-processing-bg: #3a2a10;
+    --status-processing: #ffc46b;
+    --status-shipped-bg: #1d2a45;
+    --status-shipped: #8db2ff;
+    --status-delivered-bg: #11372a;
+    --status-delivered: #5fdcae;
+    --status-refunded-bg: #262c38;
+    --status-refunded: #c3cad6;
+    --status-cancelled-bg: #3d1716;
+    --status-cancelled: #ff8b82;
+
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+
+    color-scheme: dark;
+  }
+}
+
+/* ===== Reset ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body,
+h1,
+h2,
+h3,
+p,
+ol,
+ul,
+figure {
+  margin: 0;
+}
+
+ol,
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* The hidden attribute must always win over classes that set display */
+[hidden] {
+  display: none !important;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.skip-link {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 100;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-small);
+  background: var(--color-primary);
+  color: #fff;
+  transform: translateY(-150%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+/* ===== The page grid =====
+   ┌──────────┬─────────────┐
+   │ sidebar  │ topbar      │
+   │          ├─────────────┤
+   │          │ main        │
+   └──────────┴─────────────┘
+   grid-template-areas draws the layout with names, like a little map. */
+.app {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "sidebar topbar"
+    "sidebar main";
+  min-height: 100vh;
+}
+
+.sidebar {
+  grid-area: sidebar;
+  /* Stays in place while the page scrolls */
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.25rem 1rem;
+  background: var(--color-sidebar);
+  color: var(--color-sidebar-text);
+}
+
+.topbar {
+  grid-area: topbar;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  min-height: var(--topbar-height);
+  padding: 0.75rem 1.75rem;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.main {
+  grid-area: main;
+  display: grid;
+  gap: 1.5rem;
+  align-content: start;
+  padding: 1.5rem 1.75rem 3rem;
+  min-width: 0; /* lets wide tables scroll instead of stretching the page */
+}
+
+.main:focus {
+  outline: none;
+}
+
+/* ===== Sidebar ===== */
+.sidebar__logo {
+  padding: 0 0.5rem;
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.sidebar__logo span {
+  color: var(--color-primary);
+}
+
+.sidebar__links {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-small);
+  color: inherit;
+  text-decoration: none;
+}
+
+.sidebar__link:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.sidebar__link[aria-current="page"] {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-weight: 600;
+}
+
+.sidebar__note {
+  margin-top: auto; /* pushed to the bottom */
+  padding: 0 0.5rem;
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+/* ===== Top bar ===== */
+.topbar__menu {
+  display: none; /* only on small screens */
+}
+
+.topbar__titles {
+  margin-right: auto;
+}
+
+.topbar__title {
+  font-size: 1.4rem;
+  line-height: 1.2;
+}
+
+.topbar__note {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+/* The 7 / 30 / 90 / 12 months switch */
+.range {
+  display: flex;
+  padding: 0.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  background: var(--color-surface);
+}
+
+.range__btn {
+  padding: 0.35rem 0.8rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.range__btn:hover {
+  color: var(--color-text);
+}
+
+.range__btn[aria-pressed="true"] {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+/* ===== Buttons and inputs ===== */
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  background: var(--color-surface);
+  font-size: 1.1rem;
+}
+
+.input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  background: var(--color-surface);
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+}
+
+/* ===== Cards ===== */
+.card {
+  min-width: 0;
+  padding: 1.25rem;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: var(--shadow);
+}
+
+.card__header {
+  margin-bottom: 1rem;
+}
+
+.card__title {
+  font-size: 1rem;
+}
+
+.card__subtitle {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+/* ===== Stat cards ===== */
+/* auto-fit: as many 220px+ columns as fit; 4 on a laptop, 2 on a tablet, 1 on a phone */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "label label"
+    "value spark"
+    "change spark";
+  align-items: end;
+  gap: 0.15rem 0.75rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: var(--shadow);
+}
+
+.stat-card__label {
+  grid-area: label;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.stat-card__value {
+  grid-area: value;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-card__change {
+  grid-area: change;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+/* The arrow and percentage: green when good, red when bad */
+.change {
+  font-weight: 700;
+}
+
+.change--good {
+  color: var(--color-up);
+}
+
+.change--bad {
+  color: var(--color-down);
+}
+
+.stat-card__spark {
+  grid-area: spark;
+  width: 90px;
+  height: 36px;
+  overflow: visible;
+}
+
+.spark-line {
+  fill: none;
+  stroke: var(--color-chart);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.spark-fill {
+  fill: var(--color-chart-fill);
+}
+
+/* ===== Charts ===== */
+/* A wide chart next to a narrower one */
+.charts {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+.chart {
+  position: relative; /* the tooltip is placed inside it */
+}
+
+.chart__svg {
+  display: block;
+  width: 100%;
+  height: 280px;
+  overflow: visible;
+}
+
+.chart__grid {
+  stroke: var(--color-grid);
+}
+
+.chart__label {
+  fill: var(--color-muted);
+  font-size: 11px;
+}
+
+.chart__line {
+  fill: none;
+  stroke: var(--color-chart);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.chart__area {
+  fill: var(--color-chart-fill);
+}
+
+/* The vertical line and dot that follow the pointer */
+.chart__focus-line {
+  stroke: var(--color-muted);
+  stroke-dasharray: 3 3;
+}
+
+.chart__dot {
+  fill: var(--color-surface);
+  stroke: var(--color-chart);
+  stroke-width: 2.5;
+}
+
+/* Bars: sales by category */
+.bar {
+  fill: var(--color-chart);
+}
+
+.bar-track {
+  fill: var(--color-grid);
+}
+
+.bar__label {
+  fill: var(--color-text);
+  font-size: 13px;
+}
+
+.bar__value {
+  fill: var(--color-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  min-width: 9rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: var(--radius-small);
+  background: #161b26;
+  color: #fff;
+  font-size: 0.85rem;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  pointer-events: none; /* never gets in the way of the mouse */
+}
+
+.tooltip strong {
+  display: block;
+  font-size: 1rem;
+}
+
+/* "Show as a table" under each chart */
+.data-table {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.data-table summary {
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.data-table table {
+  width: 100%;
+  margin-top: 0.5rem;
+  border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}
+
+.data-table td:last-child,
+.data-table th:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== Product lists ===== */
+.lists {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.product-list {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.product-row {
+  display: grid;
+  grid-template-columns: auto 44px 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0;
+}
+
+.product-row__rank {
+  width: 1.5rem;
+  color: var(--color-muted);
+  font-weight: 700;
+  text-align: center;
+}
+
+.product-row__photo {
+  width: 44px;
+  height: 44px;
+  padding: 0.2rem;
+  border-radius: var(--radius-small);
+  background: #fff;
+  object-fit: contain;
+}
+
+.product-row__name {
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.product-row__meta {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+.product-row__value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.product-row__value--low {
+  color: var(--color-down);
+}
+
+/* ===== Orders table ===== */
+.orders__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.orders__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.orders__filters input {
+  width: min(320px, 100%);
+}
+
+/* Wide tables scroll sideways inside this box, not the whole page */
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table th,
+.table td {
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table th {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Numbers line up on the right, digit under digit */
+.table__num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.table tbody tr:hover {
+  background: var(--color-primary-soft);
+}
+
+.table__order {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.table__customer-email {
+  display: block;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+/* Sort buttons look like plain heading text, with an arrow */
+.sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+
+.sort-btn:hover {
+  color: var(--color-text);
+}
+
+/* The arrow comes from aria-sort, so screen readers and eyes see the same thing */
+.sort-btn::after {
+  content: "↕";
+  opacity: 0.35;
+}
+
+th[aria-sort="ascending"] .sort-btn::after {
+  content: "↑";
+  opacity: 1;
+}
+
+th[aria-sort="descending"] .sort-btn::after {
+  content: "↓";
+  opacity: 1;
+}
+
+th[aria-sort="ascending"],
+th[aria-sort="descending"] {
+  color: var(--color-text);
+}
+
+/* ===== Status badges ===== */
+.status {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status--processing { background: var(--status-processing-bg); color: var(--status-processing); }
+.status--shipped { background: var(--status-shipped-bg); color: var(--status-shipped); }
+.status--delivered { background: var(--status-delivered-bg); color: var(--status-delivered); }
+.status--refunded { background: var(--status-refunded-bg); color: var(--status-refunded); }
+.status--cancelled { background: var(--status-cancelled-bg); color: var(--status-cancelled); }
+
+.orders__empty {
+  padding: 2.5rem 1rem;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+/* ===== Pagination ===== */
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 1.25rem;
+}
+
+.page-btn {
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  background: var(--color-surface);
+}
+
+.page-btn[aria-current="page"] {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+}
+
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.page-gap {
+  display: grid;
+  place-items: center;
+  min-width: 1.25rem;
+  color: var(--color-muted);
+}
+
+/* ===== Order details dialog ===== */
+.order-dialog {
+  width: min(560px, calc(100% - 2rem));
+  padding: 0;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+.order-dialog::backdrop {
+  background: rgba(16, 24, 40, 0.5);
+}
+
+.order-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.order-dialog__title {
+  font-size: 1.15rem;
+}
+
+.order-dialog__body {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+/* ===== Medium screens: charts stack ===== */
+@media (max-width: 1100px) {
+  .charts {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Small screens: the sidebar becomes a slide-in menu ===== */
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "topbar"
+      "main";
+  }
+
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 50;
+    width: min(280px, 85vw);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 0.25s ease, visibility 0.25s;
+  }
+
+  .sidebar--open {
+    transform: none;
+    visibility: visible;
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.5);
+  }
+
+  .topbar__menu {
+    display: grid;
+  }
+
+  .topbar,
+  .main {
+    padding-inline: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
+}
