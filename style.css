@@ -801,6 +801,13 @@ th[aria-sort="descending"] {
   padding: 1.25rem;
 }
 
+/* ===== When the data can't load ===== */
+.load-error {
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+}
+
 /* ===== Medium screens: charts stack ===== */
 @media (max-width: 1100px) {
   .charts {
