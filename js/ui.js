@@ -6,6 +6,8 @@ export const elements = {
   main: document.getElementById("main"),
   dataNote: document.getElementById("data-note"),
   statCards: document.querySelectorAll(".stat-card"),
+  rangeGroup: document.querySelector(".range"),
+  rangeButtons: document.querySelectorAll(".range__btn"),
 };
 
 // How each stat card shows its number
@@ -16,11 +18,49 @@ const STAT_FORMATS = {
   refundRate: (metrics) => formatPercent(metrics.refundRate),
 };
 
-// Fill every card; each one knows which number it shows from data-metric
-export function renderStatCards(metrics) {
+// "▲ 12.5%" (a relative change) or "▲ 1.5 pts" (percentage points)
+function changeText({ change, unit }) {
+  const size = Math.abs(change);
+  return unit === "points" ? `${(size * 100).toFixed(1)} pts` : formatPercent(size);
+}
+
+// The line under a number: "▲ 12.5% vs previous 30 days", coloured green
+// for good news and red for bad. The arrow is decoration; screen readers
+// hear "up 12.5% vs previous 30 days" instead.
+function renderChange(element, comparison, label) {
+  if (comparison.change === null) {
+    element.textContent = "No earlier data to compare";
+    return;
+  }
+  const up = comparison.change >= 0;
+  const badge = document.createElement("span");
+  badge.className = `change change--${comparison.good ? "good" : "bad"}`;
+
+  const arrow = document.createElement("span");
+  arrow.setAttribute("aria-hidden", "true");
+  arrow.textContent = up ? "▲ " : "▼ ";
+  const spoken = document.createElement("span");
+  spoken.className = "visually-hidden";
+  spoken.textContent = up ? "up " : "down ";
+
+  badge.append(arrow, spoken, changeText(comparison));
+  element.replaceChildren(badge, ` vs ${label}`);
+}
+
+// Fill every card; each one knows which number it shows from data-metric.
+// comparisons: from compareMetrics(); label: "previous 30 days"
+export function renderStatCards(metrics, comparisons, label) {
   for (const card of elements.statCards) {
-    const format = STAT_FORMATS[card.dataset.metric];
-    card.querySelector(".stat-card__value").textContent = format(metrics);
+    const key = card.dataset.metric;
+    card.querySelector(".stat-card__value").textContent = STAT_FORMATS[key](metrics);
+    renderChange(card.querySelector(".stat-card__change"), comparisons[key], label);
+  }
+}
+
+// Highlight the chosen range button
+export function renderRangeButtons(days) {
+  for (const button of elements.rangeButtons) {
+    button.setAttribute("aria-pressed", String(Number(button.dataset.range) === days));
   }
 }
 
