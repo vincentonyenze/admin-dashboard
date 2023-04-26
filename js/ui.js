@@ -1,6 +1,7 @@
 // Drawing the dashboard. These functions take numbers and update the page;
 // they never work anything out themselves.
 import { formatMoney, formatCount, formatPercent, formatDate } from "./format.js";
+import { drawSparkline } from "./sparkline.js";
 
 export const elements = {
   main: document.getElementById("main"),
@@ -16,6 +17,14 @@ const STAT_FORMATS = {
   orders: (metrics) => formatCount(metrics.orders),
   averageOrder: (metrics) => formatMoney(metrics.averageOrderCents),
   refundRate: (metrics) => formatPercent(metrics.refundRate),
+};
+
+// Which number in the metrics each card is about (for its sparkline)
+const STAT_VALUES = {
+  revenue: (metrics) => metrics.revenueCents,
+  orders: (metrics) => metrics.orders,
+  averageOrder: (metrics) => metrics.averageOrderCents,
+  refundRate: (metrics) => metrics.refundRate,
 };
 
 // "▲ 12.5%" (a relative change) or "▲ 1.5 pts" (percentage points)
@@ -49,11 +58,16 @@ function renderChange(element, comparison, label) {
 
 // Fill every card; each one knows which number it shows from data-metric.
 // comparisons: from compareMetrics(); label: "previous 30 days"
-export function renderStatCards(metrics, comparisons, label) {
+// series: from buildSeries(), for the sparklines
+export function renderStatCards(metrics, comparisons, label, series) {
   for (const card of elements.statCards) {
     const key = card.dataset.metric;
     card.querySelector(".stat-card__value").textContent = STAT_FORMATS[key](metrics);
     renderChange(card.querySelector(".stat-card__change"), comparisons[key], label);
+    drawSparkline(
+      card.querySelector(".stat-card__spark"),
+      series.map((point) => STAT_VALUES[key](point.metrics))
+    );
   }
 }
 

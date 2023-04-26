@@ -13,6 +13,7 @@ import {
   startOfDay,
   DEFAULT_RANGE,
 } from "./ranges.js";
+import { bucketUnit, buildSeries } from "./series.js";
 import {
   elements,
   renderStatCards,
@@ -45,8 +46,16 @@ function render() {
   // month with half a month would make every number look like growth
   const previousHadData = before.start >= firstDay;
 
+  // The range split into days, weeks or months: the shape of each number
+  const series = buildSeries(data.orders, range, bucketUnit(rangeDays));
+
   renderRangeButtons(rangeDays);
-  renderStatCards(current, compareMetrics(current, previous, previousHadData), rangeLabel(rangeDays));
+  renderStatCards(
+    current,
+    compareMetrics(current, previous, previousHadData),
+    rangeLabel(rangeDays),
+    series
+  );
 }
 
 // ===== Range buttons =====

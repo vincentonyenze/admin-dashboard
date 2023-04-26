@@ -252,8 +252,11 @@ body {
 }
 
 /* ===== Top bar ===== */
-.topbar__menu {
-  display: none; /* only on small screens */
+/* Only on small screens. ".topbar .topbar__menu" (two classes) beats
+   ".icon-btn" (one class), which sets display: grid further down. With the
+   same strength, whichever rule comes LAST in the file would win. */
+.topbar .topbar__menu {
+  display: none;
 }
 
 .topbar__titles {
@@ -840,7 +843,7 @@ th[aria-sort="descending"] {
     box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.5);
   }
 
-  .topbar__menu {
+  .topbar .topbar__menu {
     display: grid;
   }
 
