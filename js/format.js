@@ -56,6 +56,19 @@ const timeFormat = new Intl.DateTimeFormat("en-US", {
   timeZone: "UTC",
 });
 
+const monthFormat = new Intl.DateTimeFormat("en-US", { month: "short", timeZone: "UTC" });
+const monthYearFormat = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
+
+// ms -> "Oct"
+export function formatMonth(time) {
+  return monthFormat.format(time);
+}
+
+// ms -> "October 2025"
+export function formatMonthYear(time) {
+  return monthYearFormat.format(time);
+}
+
 // ms -> "Sep 30, 2026"
 export function formatDate(time) {
   return dateFormat.format(time);

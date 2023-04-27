@@ -19,6 +19,7 @@ import {
   renderStatCards,
   renderDataNote,
   renderRangeButtons,
+  renderRevenueChart,
   showLoadError,
 } from "./ui.js";
 
@@ -47,7 +48,8 @@ function render() {
   const previousHadData = before.start >= firstDay;
 
   // The range split into days, weeks or months: the shape of each number
-  const series = buildSeries(data.orders, range, bucketUnit(rangeDays));
+  const unit = bucketUnit(rangeDays);
+  const series = buildSeries(data.orders, range, unit);
 
   renderRangeButtons(rangeDays);
   renderStatCards(
@@ -56,6 +58,7 @@ function render() {
     rangeLabel(rangeDays),
     series
   );
+  renderRevenueChart(series, unit);
 }
 
 // ===== Range buttons =====
@@ -92,5 +95,14 @@ async function start() {
 }
 
 elements.rangeGroup.addEventListener("click", handleRangeClick);
+// Charts are drawn at their size on screen, so draw again when that
+// changes. requestAnimationFrame: at most once per frame while dragging.
+let resizeFrame = null;
+window.addEventListener("resize", () => {
+  cancelAnimationFrame(resizeFrame);
+  resizeFrame = requestAnimationFrame(() => {
+    if (data.orders.length > 0) render();
+  });
+});
 
 start();

@@ -1,7 +1,17 @@
 // Drawing the dashboard. These functions take numbers and update the page;
 // they never work anything out themselves.
-import { formatMoney, formatCount, formatPercent, formatDate } from "./format.js";
+import {
+  formatMoney,
+  formatMoneyCompact,
+  formatCount,
+  formatPercent,
+  formatDate,
+  formatShortDate,
+  formatMonth,
+  formatMonthYear,
+} from "./format.js";
 import { drawSparkline } from "./sparkline.js";
+import { drawLineChart } from "./line-chart.js";
 
 export const elements = {
   main: document.getElementById("main"),
@@ -9,6 +19,10 @@ export const elements = {
   statCards: document.querySelectorAll(".stat-card"),
   rangeGroup: document.querySelector(".range"),
   rangeButtons: document.querySelectorAll(".range__btn"),
+  revenueChart: document.getElementById("revenue-chart"),
+  revenueSubtitle: document.getElementById("revenue-subtitle"),
+  revenueSummary: document.getElementById("revenue-summary"),
+  revenueTable: document.getElementById("revenue-table"),
 };
 
 // How each stat card shows its number
@@ -99,4 +113,78 @@ export function showLoadError(message, onRetry) {
 
   box.append(text, retry);
   elements.main.replaceChildren(box);
+}
+
+// ===== Revenue over time =====
+// How each bucket is named: on the axis (short) and in the table (full)
+function bucketLabels(point, unit) {
+  if (unit === "month") return { short: formatMonth(point.start), full: formatMonthYear(point.start) };
+  if (unit === "week") {
+    return { short: formatShortDate(point.start), full: `Week of ${formatShortDate(point.start)}` };
+  }
+  return { short: formatShortDate(point.start), full: formatDate(point.start) };
+}
+
+const UNIT_WORDS = { day: "Daily", week: "Weekly", month: "Monthly" };
+
+// A table version of the chart: exact numbers for everyone, and the way
+// screen-reader users explore the data
+function fillTable(table, headings, rows) {
+  const head = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  for (const text of headings) {
+    const th = document.createElement("th");
+    th.scope = "col";
+    th.textContent = text;
+    headRow.append(th);
+  }
+  head.append(headRow);
+
+  const body = document.createElement("tbody");
+  for (const cells of rows) {
+    const tr = document.createElement("tr");
+    cells.forEach((text, i) => {
+      // The first cell names the row, so it's a heading for that row
+      const cell = document.createElement(i === 0 ? "th" : "td");
+      if (i === 0) cell.scope = "row";
+      cell.textContent = text;
+      tr.append(cell);
+    });
+    body.append(tr);
+  }
+  table.replaceChildren(head, body);
+}
+
+// series: from buildSeries(); unit: "day" | "week" | "month"
+// Returns the chart's geometry (Step 8 uses it for the tooltip).
+export function renderRevenueChart(series, unit) {
+  const values = series.map((point) => point.metrics.revenueCents);
+  const labels = series.map((point) => bucketLabels(point, unit));
+  const total = values.reduce((a, b) => a + b, 0);
+
+  const geometry = drawLineChart(
+    elements.revenueChart,
+    values,
+    labels.map((label) => label.short),
+    formatMoneyCompact
+  );
+
+  elements.revenueSubtitle.textContent = `${UNIT_WORDS[unit]} revenue · ${formatMoney(total)} in total`;
+
+  // One sentence a screen reader hears for the whole chart
+  if (values.length > 0) {
+    const best = values.indexOf(Math.max(...values));
+    const worst = values.indexOf(Math.min(...values));
+    elements.revenueSummary.textContent =
+      `${UNIT_WORDS[unit]} revenue, ${formatMoney(total)} in total. ` +
+      `Highest: ${labels[best].full} (${formatMoney(values[best])}). ` +
+      `Lowest: ${labels[worst].full} (${formatMoney(values[worst])}).`;
+  }
+
+  fillTable(
+    elements.revenueTable,
+    [unit === "month" ? "Month" : unit === "week" ? "Week" : "Day", "Revenue"],
+    series.map((point, i) => [labels[i].full, formatMoney(values[i])])
+  );
+  return geometry;
 }
