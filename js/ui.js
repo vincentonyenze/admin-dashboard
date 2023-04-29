@@ -12,6 +12,7 @@ import {
 } from "./format.js";
 import { drawSparkline } from "./sparkline.js";
 import { drawLineChart } from "./line-chart.js";
+import { createChartFocus } from "./chart-focus.js";
 
 export const elements = {
   main: document.getElementById("main"),
@@ -23,6 +24,8 @@ export const elements = {
   revenueSubtitle: document.getElementById("revenue-subtitle"),
   revenueSummary: document.getElementById("revenue-summary"),
   revenueTable: document.getElementById("revenue-table"),
+  revenueTooltip: document.getElementById("revenue-tooltip"),
+  revenueLive: document.getElementById("revenue-live"),
 };
 
 // How each stat card shows its number
@@ -155,8 +158,14 @@ function fillTable(table, headings, rows) {
   table.replaceChildren(head, body);
 }
 
+// The tooltip and keyboard support, set up once; updated after every draw
+const updateRevenueFocus = createChartFocus(
+  elements.revenueChart,
+  elements.revenueTooltip,
+  elements.revenueLive
+);
+
 // series: from buildSeries(); unit: "day" | "week" | "month"
-// Returns the chart's geometry (Step 8 uses it for the tooltip).
 export function renderRevenueChart(series, unit) {
   const values = series.map((point) => point.metrics.revenueCents);
   const labels = series.map((point) => bucketLabels(point, unit));
@@ -186,5 +195,13 @@ export function renderRevenueChart(series, unit) {
     [unit === "month" ? "Month" : unit === "week" ? "Week" : "Day", "Revenue"],
     series.map((point, i) => [labels[i].full, formatMoney(values[i])])
   );
-  return geometry;
+
+  // What the tooltip says for each point
+  updateRevenueFocus(
+    geometry,
+    series.map((point, i) => ({
+      title: labels[i].full,
+      lines: [formatMoney(values[i]), `${formatCount(point.metrics.orders)} order${point.metrics.orders === 1 ? "" : "s"}`],
+    }))
+  );
 }

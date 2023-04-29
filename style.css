@@ -858,3 +858,10 @@ th[aria-sort="descending"] {
     transition: none;
   }
 }
+
+/* The chart can be focused with Tab (to explore it with the arrow keys) */
+.chart__svg:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 4px;
+  border-radius: 4px;
+}

@@ -85,11 +85,16 @@
           <!-- role="img" + a label: screen readers treat the chart as one
                picture and hear its summary, instead of every line in it -->
           <div class="chart">
-            <svg id="revenue-chart" class="chart__svg" role="img" aria-labelledby="revenue-title revenue-summary"></svg>
-            <!-- The box that follows the mouse (or keyboard) over the chart -->
-            <div id="revenue-tooltip" class="tooltip" hidden></div>
+            <svg id="revenue-chart" class="chart__svg" role="img"
+                 aria-labelledby="revenue-title revenue-summary" aria-describedby="revenue-keys"></svg>
+            <!-- The box that follows the mouse (or keyboard) over the chart.
+                 aria-hidden: screen readers get #revenue-live instead. -->
+            <div id="revenue-tooltip" class="tooltip" aria-hidden="true" hidden></div>
           </div>
           <p id="revenue-summary" class="visually-hidden"></p>
+          <p id="revenue-keys" class="visually-hidden">Use the left and right arrow keys to move between points.</p>
+          <!-- Reads out each point as keyboard users move along the chart -->
+          <p id="revenue-live" class="visually-hidden" aria-live="polite"></p>
           <!-- The same numbers as a table: for screen readers, and for anyone
                who wants exact figures. <details> starts closed. -->
           <details class="data-table">
