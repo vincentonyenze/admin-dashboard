@@ -14,6 +14,7 @@ import {
   DEFAULT_RANGE,
 } from "./ranges.js";
 import { bucketUnit, buildSeries } from "./series.js";
+import { newestFirst } from "./orders.js";
 import {
   elements,
   renderStatCards,
@@ -21,6 +22,7 @@ import {
   renderRangeButtons,
   renderRevenueChart,
   renderCategoryChart,
+  renderOrdersTable,
   showLoadError,
 } from "./ui.js";
 
@@ -62,6 +64,10 @@ function render() {
   );
   renderRevenueChart(series, unit);
   renderCategoryChart(salesByCategory(inRange, data.categories));
+
+  // The 20 newest orders for now; sorting, search and pages come next
+  const orders = newestFirst(inRange);
+  renderOrdersTable(orders.slice(0, 20), orders.length);
 }
 
 // ===== Range buttons =====

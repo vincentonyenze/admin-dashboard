@@ -9,7 +9,9 @@ import {
   formatShortDate,
   formatMonth,
   formatMonthYear,
+  formatTime,
 } from "./format.js";
+import { itemsSummary, unitCount } from "./orders.js";
 import { drawSparkline } from "./sparkline.js";
 import { drawLineChart } from "./line-chart.js";
 import { createChartFocus } from "./chart-focus.js";
@@ -30,6 +32,9 @@ export const elements = {
   categoryChart: document.getElementById("category-chart"),
   categorySummary: document.getElementById("category-summary"),
   categoryTable: document.getElementById("category-table"),
+  ordersBody: document.getElementById("orders-body"),
+  ordersCount: document.getElementById("orders-count"),
+  ordersEmpty: document.getElementById("orders-empty"),
 };
 
 // How each stat card shows its number
@@ -233,4 +238,59 @@ export function renderCategoryChart(rows) {
     ["Category", "Sales"],
     rows.map((row) => [row.name, `${formatMoney(row.salesCents)} (${formatPercent(row.share)})`])
   );
+}
+
+// ===== Orders table =====
+// A cell with a main line and a small second line underneath
+function twoLineCell(main, second, secondClass) {
+  const td = document.createElement("td");
+  td.append(main);
+  const small = document.createElement("span");
+  small.className = secondClass;
+  small.textContent = second;
+  td.append(small);
+  return td;
+}
+
+function createOrderRow(order) {
+  const tr = document.createElement("tr");
+
+  // The order number is a button: Step 13 opens the order's details
+  const idCell = document.createElement("td");
+  const idButton = document.createElement("button");
+  idButton.type = "button";
+  idButton.className = "table__order";
+  idButton.dataset.orderId = order.id;
+  idButton.textContent = order.id;
+  idCell.append(idButton);
+
+  const date = twoLineCell(formatDate(order.time), formatTime(order.time), "table__customer-email");
+  const customer = twoLineCell(order.customer.name, order.customer.email, "table__customer-email");
+
+  const units = unitCount(order);
+  const items = twoLineCell(itemsSummary(order), `${units} item${units === 1 ? "" : "s"}`, "table__customer-email");
+
+  // The badge shows the word, not just a colour, so it works for everyone
+  const statusCell = document.createElement("td");
+  const badge = document.createElement("span");
+  badge.className = `status status--${order.status}`;
+  badge.textContent = order.status;
+  statusCell.append(badge);
+
+  const total = document.createElement("td");
+  total.className = "table__num";
+  total.textContent = formatMoney(order.totalCents);
+
+  tr.append(idCell, date, customer, items, statusCell, total);
+  return tr;
+}
+
+// orders: the rows to show; total: how many orders match altogether
+export function renderOrdersTable(orders, total) {
+  elements.ordersBody.replaceChildren(...orders.map(createOrderRow));
+  elements.ordersEmpty.hidden = orders.length > 0;
+  elements.ordersCount.textContent =
+    total === orders.length
+      ? `${formatCount(total)} order${total === 1 ? "" : "s"}`
+      : `Showing ${formatCount(orders.length)} of ${formatCount(total)} orders`;
 }

@@ -870,3 +870,9 @@ th[aria-sort="descending"] {
 .chart__svg--bars {
   height: auto;
 }
+
+/* Sections jumped to from the sidebar (#orders, #sales...) stop below the
+   sticky top bar instead of hiding behind it */
+.main [id] {
+  scroll-margin-top: calc(var(--topbar-height) + 1rem);
+}
