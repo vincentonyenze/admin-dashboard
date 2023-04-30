@@ -865,3 +865,8 @@ th[aria-sort="descending"] {
   outline-offset: 4px;
   border-radius: 4px;
 }
+
+/* The bar chart's height is set by JavaScript: as tall as its rows */
+.chart__svg--bars {
+  height: auto;
+}

@@ -2,7 +2,7 @@
 // It connects the data (api.js), the numbers (metrics.js, ranges.js) and
 // the page (ui.js).
 import { loadDashboardData } from "./api.js";
-import { prepareOrders, computeMetrics } from "./metrics.js";
+import { prepareOrders, computeMetrics, salesByCategory } from "./metrics.js";
 import {
   lastDays,
   previousRange,
@@ -20,6 +20,7 @@ import {
   renderDataNote,
   renderRangeButtons,
   renderRevenueChart,
+  renderCategoryChart,
   showLoadError,
 } from "./ui.js";
 
@@ -40,7 +41,8 @@ let rangeDays = DEFAULT_RANGE;
 function render() {
   const range = lastDays(today, rangeDays);
   const before = previousRange(range);
-  const current = computeMetrics(ordersInRange(data.orders, range));
+  const inRange = ordersInRange(data.orders, range);
+  const current = computeMetrics(inRange);
   const previous = computeMetrics(ordersInRange(data.orders, before));
 
   // Only compare with a period the data fully covers: comparing a full
@@ -59,6 +61,7 @@ function render() {
     series
   );
   renderRevenueChart(series, unit);
+  renderCategoryChart(salesByCategory(inRange, data.categories));
 }
 
 // ===== Range buttons =====

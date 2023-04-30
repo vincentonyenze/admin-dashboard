@@ -13,6 +13,7 @@ import {
 import { drawSparkline } from "./sparkline.js";
 import { drawLineChart } from "./line-chart.js";
 import { createChartFocus } from "./chart-focus.js";
+import { drawBarChart } from "./bar-chart.js";
 
 export const elements = {
   main: document.getElementById("main"),
@@ -26,6 +27,9 @@ export const elements = {
   revenueTable: document.getElementById("revenue-table"),
   revenueTooltip: document.getElementById("revenue-tooltip"),
   revenueLive: document.getElementById("revenue-live"),
+  categoryChart: document.getElementById("category-chart"),
+  categorySummary: document.getElementById("category-summary"),
+  categoryTable: document.getElementById("category-table"),
 };
 
 // How each stat card shows its number
@@ -203,5 +207,30 @@ export function renderRevenueChart(series, unit) {
       title: labels[i].full,
       lines: [formatMoney(values[i]), `${formatCount(point.metrics.orders)} order${point.metrics.orders === 1 ? "" : "s"}`],
     }))
+  );
+}
+
+// ===== Sales by category =====
+// rows: from salesByCategory()
+export function renderCategoryChart(rows) {
+  drawBarChart(
+    elements.categoryChart,
+    rows.map((row) => ({
+      label: row.name,
+      value: row.salesCents,
+      valueLabel: `${formatMoneyCompact(row.salesCents)} · ${formatPercent(row.share, 0)}`,
+    }))
+  );
+
+  const [top] = rows;
+  elements.categorySummary.textContent =
+    top && top.salesCents > 0
+      ? `${top.name} sold the most, with ${formatPercent(top.share, 0)} of product sales (${formatMoney(top.salesCents)}).`
+      : "No product sales in this period.";
+
+  fillTable(
+    elements.categoryTable,
+    ["Category", "Sales"],
+    rows.map((row) => [row.name, `${formatMoney(row.salesCents)} (${formatPercent(row.share)})`])
   );
 }

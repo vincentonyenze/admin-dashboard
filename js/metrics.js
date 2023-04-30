@@ -21,6 +21,34 @@ export function prepareOrders(rawOrders) {
   return rawOrders.map((order) => ({ ...order, time: Date.parse(order.createdAt) }));
 }
 
+// Product sales per category, biggest first:
+//   [{ slug, name, salesCents, share }, ...]   share: 0 to 1
+// This counts the ITEMS in paid orders (price × quantity), so it's product
+// sales before shipping and tax. That's why the categories add up to less
+// than the revenue card, which counts whole order totals.
+// Every category is listed, even with no sales, so nothing silently vanishes.
+export function salesByCategory(orders, categories) {
+  const totals = new Map(categories.map((category) => [category.slug, 0]));
+  for (const order of orders) {
+    if (!isPaid(order)) continue;
+    for (const item of order.items) {
+      totals.set(item.category, (totals.get(item.category) ?? 0) + item.unitCents * item.quantity);
+    }
+  }
+
+  const all = [...totals.values()].reduce((a, b) => a + b, 0);
+  const names = new Map(categories.map((category) => [category.slug, category.name]));
+  return [...totals]
+    .map(([slug, salesCents]) => ({
+      slug,
+      name: names.get(slug) ?? slug,
+      salesCents,
+      share: all > 0 ? salesCents / all : 0,
+    }))
+    // Biggest first; equal ones in alphabetical order so it never shuffles
+    .sort((a, b) => b.salesCents - a.salesCents || a.name.localeCompare(b.name));
+}
+
 export function computeMetrics(orders) {
   const paid = orders.filter(isPaid);
   const revenueCents = paid.reduce((sum, order) => sum + order.totalCents, 0);
