@@ -35,6 +35,7 @@ export const elements = {
   ordersBody: document.getElementById("orders-body"),
   ordersCount: document.getElementById("orders-count"),
   ordersEmpty: document.getElementById("orders-empty"),
+  ordersHead: document.querySelector(".table thead"),
 };
 
 // How each stat card shows its number
@@ -293,4 +294,13 @@ export function renderOrdersTable(orders, total) {
     total === orders.length
       ? `${formatCount(total)} order${total === 1 ? "" : "s"}`
       : `Showing ${formatCount(orders.length)} of ${formatCount(total)} orders`;
+}
+
+// Mark the sorted column. aria-sort tells screen readers ("Total, sorted
+// descending") and the CSS draws the ↑ / ↓ arrow from the same attribute.
+export function renderSortHeaders(sort) {
+  for (const button of elements.ordersHead.querySelectorAll(".sort-btn")) {
+    const th = button.closest("th");
+    th.setAttribute("aria-sort", button.dataset.sort === sort.key ? sort.direction : "none");
+  }
 }
