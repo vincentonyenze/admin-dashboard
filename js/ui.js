@@ -36,6 +36,11 @@ export const elements = {
   ordersCount: document.getElementById("orders-count"),
   ordersEmpty: document.getElementById("orders-empty"),
   ordersHead: document.querySelector(".table thead"),
+  ordersTitle: document.getElementById("orders-title"),
+  ordersFilters: document.getElementById("orders-filters"),
+  ordersSearch: document.getElementById("orders-search"),
+  ordersStatus: document.getElementById("orders-status"),
+  ordersPagination: document.getElementById("orders-pagination"),
 };
 
 // How each stat card shows its number
@@ -286,14 +291,56 @@ function createOrderRow(order) {
   return tr;
 }
 
-// orders: the rows to show; total: how many orders match altogether
-export function renderOrdersTable(orders, total) {
-  elements.ordersBody.replaceChildren(...orders.map(createOrderRow));
-  elements.ordersEmpty.hidden = orders.length > 0;
-  elements.ordersCount.textContent =
-    total === orders.length
-      ? `${formatCount(total)} order${total === 1 ? "" : "s"}`
-      : `Showing ${formatCount(orders.length)} of ${formatCount(total)} orders`;
+// page: from paginate(); inRange: how many orders the date range has
+// before searching or filtering
+export function renderOrdersTable(page, inRange) {
+  elements.ordersBody.replaceChildren(...page.items.map(createOrderRow));
+  elements.ordersEmpty.hidden = page.total > 0;
+
+  const filtered = page.total !== inRange;
+  const noun = `${filtered ? "matching " : ""}order${page.total === 1 ? "" : "s"}`;
+  let text =
+    page.totalPages > 1
+      ? `Showing ${formatCount(page.from)}–${formatCount(page.to)} of ${formatCount(page.total)} ${noun}`
+      : `${formatCount(page.total)} ${noun}`;
+  if (filtered) text += ` (${formatCount(inRange)} in total)`;
+  elements.ordersCount.textContent = text;
+}
+
+// ‹ 1 … 4 5 6 … 16 ›  (pages: from pageNumbers())
+function pageButton(label, page, { current = false, disabled = false, ariaLabel } = {}) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "page-btn";
+  button.textContent = label;
+  button.dataset.page = page;
+  button.disabled = disabled;
+  if (ariaLabel) button.setAttribute("aria-label", ariaLabel);
+  if (current) button.setAttribute("aria-current", "page");
+  return button;
+}
+
+export function renderPagination(current, totalPages, pages) {
+  elements.ordersPagination.hidden = totalPages <= 1;
+  if (totalPages <= 1) {
+    elements.ordersPagination.replaceChildren();
+    return;
+  }
+  const buttons = pages.map((page) => {
+    if (page === "…") {
+      const gap = document.createElement("span");
+      gap.className = "page-gap";
+      gap.setAttribute("aria-hidden", "true");
+      gap.textContent = "…";
+      return gap;
+    }
+    return pageButton(page, page, { current: page === current, ariaLabel: `Page ${page}` });
+  });
+  elements.ordersPagination.replaceChildren(
+    pageButton("‹", current - 1, { disabled: current === 1, ariaLabel: "Previous page" }),
+    ...buttons,
+    pageButton("›", current + 1, { disabled: current === totalPages, ariaLabel: "Next page" })
+  );
 }
 
 // Mark the sorted column. aria-sort tells screen readers ("Total, sorted

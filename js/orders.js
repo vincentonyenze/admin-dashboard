@@ -23,6 +23,25 @@ export function newestFirst(orders) {
   return [...orders].sort((a, b) => b.time - a.time || a.id.localeCompare(b.id));
 }
 
+// ===== Search and filter =====
+// Everything a search can match for one order: its number, the customer's
+// name and email. Lower case, so searching ignores capitals.
+function searchableText(order) {
+  return `${order.id} ${order.customer.name} ${order.customer.email}`.toLowerCase();
+}
+
+// filters: { search: "okafor", status: "refunded" }   ("" means any)
+// Every word typed must appear somewhere: "amara okafor" finds Amara
+// Okafor but not Amara Smith. "12149" finds ORD-12149.
+export function filterOrders(orders, { search = "", status = "" } = {}) {
+  const words = search.toLowerCase().split(/\s+/).filter(Boolean);
+  return orders.filter(
+    (order) =>
+      (status === "" || order.status === status) &&
+      words.every((word) => searchableText(order).includes(word))
+  );
+}
+
 // ===== Sorting =====
 // The order statuses go through, from new to finished. Sorting by status
 // follows this, not the alphabet ("cancelled" before "delivered" would

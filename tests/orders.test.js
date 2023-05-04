@@ -8,6 +8,7 @@ import {
   nextSort,
   parseSort,
   DEFAULT_SORT,
+  filterOrders,
 } from "../js/orders.js";
 
 const item = (name, quantity = 1) => ({ name, quantity, unitCents: 100, category: "x" });
@@ -138,5 +139,47 @@ describe("parseSort", () => {
   test("falls back to newest first for anything odd", () => {
     assert.deepEqual(parseSort("?sort=price&dir=up"), DEFAULT_SORT);
     assert.deepEqual(parseSort(""), DEFAULT_SORT);
+  });
+});
+
+describe("filterOrders", () => {
+  const order = (id, name, email, status) => ({ id, customer: { name, email }, status, items: [] });
+  const orders = [
+    order("ORD-12149", "Amara Okafor", "amara.okafor1@example.com", "delivered"),
+    order("ORD-12150", "Amara Smith", "amara.smith2@example.com", "refunded"),
+    order("ORD-12151", "Kofi Mensah", "kofi.mensah3@example.com", "refunded"),
+  ];
+  const ids = (list) => list.map((o) => o.id);
+
+  test("no filters: everything", () => {
+    assert.equal(filterOrders(orders, {}).length, 3);
+  });
+
+  test("finds an order by its number, even without ORD-", () => {
+    assert.deepEqual(ids(filterOrders(orders, { search: "12149" })), ["ORD-12149"]);
+  });
+
+  test("finds a customer by name, ignoring capitals", () => {
+    assert.deepEqual(ids(filterOrders(orders, { search: "AMARA" })), ["ORD-12149", "ORD-12150"]);
+  });
+
+  test("needs every word: first and last name together", () => {
+    assert.deepEqual(ids(filterOrders(orders, { search: "amara okafor" })), ["ORD-12149"]);
+  });
+
+  test("finds an email", () => {
+    assert.deepEqual(ids(filterOrders(orders, { search: "kofi.mensah" })), ["ORD-12151"]);
+  });
+
+  test("filters by status", () => {
+    assert.deepEqual(ids(filterOrders(orders, { status: "refunded" })), ["ORD-12150", "ORD-12151"]);
+  });
+
+  test("search and status together", () => {
+    assert.deepEqual(ids(filterOrders(orders, { search: "amara", status: "refunded" })), ["ORD-12150"]);
+  });
+
+  test("ignores extra spaces", () => {
+    assert.equal(filterOrders(orders, { search: "   " }).length, 3);
   });
 });

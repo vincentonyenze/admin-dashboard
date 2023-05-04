@@ -876,3 +876,7 @@ th[aria-sort="descending"] {
 .main [id] {
   scroll-margin-top: calc(var(--topbar-height) + 1rem);
 }
+
+.card__title:focus {
+  outline: none;
+}
