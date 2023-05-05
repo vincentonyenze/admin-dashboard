@@ -41,6 +41,10 @@ export const elements = {
   ordersSearch: document.getElementById("orders-search"),
   ordersStatus: document.getElementById("orders-status"),
   ordersPagination: document.getElementById("orders-pagination"),
+  orderDialog: document.getElementById("order-dialog"),
+  orderDialogTitle: document.getElementById("order-dialog-title"),
+  orderDialogBody: document.getElementById("order-dialog-body"),
+  orderDialogClose: document.getElementById("order-dialog-close"),
 };
 
 // How each stat card shows its number
@@ -350,4 +354,93 @@ export function renderSortHeaders(sort) {
     const th = button.closest("th");
     th.setAttribute("aria-sort", button.dataset.sort === sort.key ? sort.direction : "none");
   }
+}
+
+// ===== Order details dialog =====
+// A small helper: an element with a class and some text
+function make(tag, className, text) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  if (text !== undefined) element.textContent = text;
+  return element;
+}
+
+function statusBadge(status) {
+  return make("span", `status status--${status}`, status);
+}
+
+// One product line: photo, name, "2 × $10.00", and the line total
+function orderLine(line) {
+  const item = make("li", "order-line");
+  if (line.image) {
+    const photo = make("img", "order-line__photo");
+    photo.src = line.image;
+    photo.alt = ""; // the name is right next to it
+    photo.width = 48;
+    photo.height = 48;
+    item.append(photo);
+  } else {
+    // The product isn't in the shop any more: keep the space, no broken image
+    item.append(make("span", "order-line__photo order-line__photo--missing", "📦"));
+  }
+  const info = make("div", "order-line__info");
+  info.append(
+    make("p", "order-line__name", line.name),
+    make("p", "order-line__qty", `${line.quantity} × ${formatMoney(line.unitCents)}`)
+  );
+  item.append(info, make("p", "order-line__total", formatMoney(line.lineCents)));
+  return item;
+}
+
+// A <dl> of names and amounts: Subtotal $40.00, Shipping Free, ...
+function summaryList(rows) {
+  const list = make("dl", "order-summary");
+  for (const [name, value, className] of rows) {
+    const row = make("div", `order-summary__row ${className ?? ""}`.trim());
+    row.append(make("dt", "", name), make("dd", "", value));
+    list.append(row);
+  }
+  return list;
+}
+
+// order: the order; details: from orderDetails()
+export function showOrderDialog(order, details) {
+  elements.orderDialogTitle.textContent = `Order ${order.id}`;
+
+  const meta = make("p", "order-meta");
+  meta.append(statusBadge(order.status), ` Placed ${formatDate(order.time)} at ${formatTime(order.time)}`);
+
+  const customer = make("section", "order-customer");
+  const orders = details.customerOrderCount;
+  customer.append(
+    make("h3", "order-section-title", "Customer"),
+    make("p", "order-customer__name", order.customer.name),
+    make("p", "order-customer__email", order.customer.email),
+    make(
+      "p",
+      "order-customer__history",
+      `${formatCount(orders)} order${orders === 1 ? "" : "s"} in total · ${formatMoney(details.customerSpentCents)} spent`
+    )
+  );
+
+  const items = make("section", "order-items");
+  const list = make("ul", "order-lines");
+  list.append(...details.lines.map(orderLine));
+  items.append(make("h3", "order-section-title", "Items"), list);
+
+  const summary = summaryList([
+    ["Subtotal", formatMoney(order.subtotalCents)],
+    ["Shipping", order.shippingCents === 0 ? "Free" : formatMoney(order.shippingCents)],
+    ["Tax", formatMoney(order.taxCents)],
+    ["Total", formatMoney(order.totalCents), "order-summary__row--total"],
+  ]);
+
+  elements.orderDialogBody.replaceChildren(meta, customer, items, summary);
+  // showModal(): Esc closes it, the page behind is blocked, and focus
+  // goes back to the order number that opened it when it closes
+  elements.orderDialog.showModal();
+}
+
+export function closeOrderDialog() {
+  elements.orderDialog.close();
 }

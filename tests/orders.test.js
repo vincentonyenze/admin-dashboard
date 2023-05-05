@@ -9,6 +9,7 @@ import {
   parseSort,
   DEFAULT_SORT,
   filterOrders,
+  orderDetails,
 } from "../js/orders.js";
 
 const item = (name, quantity = 1) => ({ name, quantity, unitCents: 100, category: "x" });
@@ -181,5 +182,50 @@ describe("filterOrders", () => {
 
   test("ignores extra spaces", () => {
     assert.equal(filterOrders(orders, { search: "   " }).length, 3);
+  });
+});
+
+describe("orderDetails", () => {
+  // The same rule as metrics.js: these statuses brought money in
+  const isPaid = (o) => ["processing", "shipped", "delivered"].includes(o.status);
+  const customer = (id) => ({ id, name: `Customer ${id}`, email: `${id}@example.com` });
+  const products = new Map([[7, { id: 7, image: "images/products/7.webp" }]]);
+
+  const order = {
+    id: "ORD-1",
+    customer: customer("C1"),
+    status: "delivered",
+    totalCents: 3000,
+    items: [
+      { productId: 7, name: "Lipstick", quantity: 2, unitCents: 1000 },
+      { productId: 99, name: "Old product", quantity: 1, unitCents: 500 },
+    ],
+  };
+  const others = [
+    order,
+    { id: "ORD-2", customer: customer("C1"), status: "delivered", totalCents: 2000, items: [] },
+    { id: "ORD-3", customer: customer("C1"), status: "refunded", totalCents: 9999, items: [] },
+    { id: "ORD-4", customer: customer("C2"), status: "delivered", totalCents: 5000, items: [] },
+  ];
+  const details = orderDetails(order, products, others, isPaid);
+
+  test("each line has its quantity and line total", () => {
+    assert.deepEqual(
+      details.lines.map((line) => [line.name, line.quantity, line.lineCents]),
+      [["Lipstick", 2, 2000], ["Old product", 1, 500]]
+    );
+  });
+
+  test("finds the product's photo, or null if the product is gone", () => {
+    assert.equal(details.lines[0].image, "images/products/7.webp");
+    assert.equal(details.lines[1].image, null);
+  });
+
+  test("counts every order this customer placed", () => {
+    assert.equal(details.customerOrderCount, 3);
+  });
+
+  test("their spending only counts paid orders", () => {
+    assert.equal(details.customerSpentCents, 5000);
   });
 });

@@ -2,7 +2,7 @@
 // It connects the data (api.js), the numbers (metrics.js, ranges.js) and
 // the page (ui.js).
 import { loadDashboardData } from "./api.js";
-import { prepareOrders, computeMetrics, salesByCategory } from "./metrics.js";
+import { prepareOrders, computeMetrics, salesByCategory, isPaid } from "./metrics.js";
 import {
   lastDays,
   previousRange,
@@ -19,6 +19,7 @@ import {
   nextSort,
   parseSort,
   filterOrders,
+  orderDetails,
   DEFAULT_SORT,
   STATUS_ORDER,
 } from "./orders.js";
@@ -34,6 +35,8 @@ import {
   renderOrdersTable,
   renderSortHeaders,
   renderPagination,
+  showOrderDialog,
+  closeOrderDialog,
   showLoadError,
 } from "./ui.js";
 
@@ -44,6 +47,9 @@ let data = { products: [], categories: [], orders: [] };
 // computer's clock says)
 let today = 0;
 let firstDay = 0;
+// Quick lookups by id, built once when the data arrives
+let ordersById = new Map();
+let productsById = new Map();
 
 // How many days the page is showing: 7, 30, 90 or 365
 let rangeDays = DEFAULT_RANGE;
@@ -148,6 +154,20 @@ function handleSortClick(event) {
   showFromFirstPage();
 }
 
+// ===== Order details =====
+// One listener for every order number in the table
+function handleOrderClick(event) {
+  const button = event.target.closest(".table__order");
+  if (!button) return;
+  const order = ordersById.get(button.dataset.orderId);
+  if (order) showOrderDialog(order, orderDetails(order, productsById, data.orders, isPaid));
+}
+
+// Clicks on the dark backdrop land on the <dialog> element itself
+function handleDialogClick(event) {
+  if (event.target === elements.orderDialog) closeOrderDialog();
+}
+
 // ===== The URL =====
 // Change some of the URL's settings, keeping the rest. An empty value is
 // left out, so the URL only holds what's actually chosen. replaceState:
@@ -198,6 +218,9 @@ async function start() {
     return;
   }
 
+  ordersById = new Map(data.orders.map((order) => [order.id, order]));
+  productsById = new Map(data.products.map((product) => [product.id, product]));
+
   const times = data.orders.map((order) => order.time);
   today = Math.max(...times);
   firstDay = startOfDay(Math.min(...times));
@@ -218,6 +241,9 @@ elements.ordersFilters.addEventListener("submit", (event) => {
   readFiltersSoon.flush();
 });
 elements.ordersPagination.addEventListener("click", handlePageClick);
+elements.ordersBody.addEventListener("click", handleOrderClick);
+elements.orderDialog.addEventListener("click", handleDialogClick);
+elements.orderDialogClose.addEventListener("click", closeOrderDialog);
 // Charts are drawn at their size on screen, so draw again when that
 // changes. requestAnimationFrame: at most once per frame while dragging.
 let resizeFrame = null;

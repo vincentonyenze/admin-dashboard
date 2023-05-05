@@ -23,6 +23,30 @@ export function newestFirst(orders) {
   return [...orders].sort((a, b) => b.time - a.time || a.id.localeCompare(b.id));
 }
 
+// ===== One order in detail =====
+// Everything the details dialog shows about an order:
+// - its lines, with each product's photo (null if the product is gone)
+// - the customer's history: how many orders they've placed, and how much
+//   they've spent on paid orders, across ALL the data (not just the range)
+export function orderDetails(order, productsById, allOrders, isPaid) {
+  const lines = order.items.map((item) => ({
+    name: item.name,
+    image: productsById.get(item.productId)?.image ?? null,
+    quantity: item.quantity,
+    unitCents: item.unitCents,
+    lineCents: item.unitCents * item.quantity,
+  }));
+
+  const customerOrders = allOrders.filter((other) => other.customer.id === order.customer.id);
+  return {
+    lines,
+    customerOrderCount: customerOrders.length,
+    customerSpentCents: customerOrders
+      .filter(isPaid)
+      .reduce((sum, other) => sum + other.totalCents, 0),
+  };
+}
+
 // ===== Search and filter =====
 // Everything a search can match for one order: its number, the customer's
 // name and email. Lower case, so searching ignores capitals.
