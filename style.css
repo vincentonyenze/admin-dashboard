@@ -981,3 +981,17 @@ th[aria-sort="descending"] {
 .order-summary__row--total dt {
   color: var(--color-text);
 }
+
+.product-row__empty {
+  padding: 1rem 0;
+  color: var(--color-muted);
+}
+
+/* The 📦 stand-in, sized like a product photo */
+.product-row .order-line__photo--missing {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-small);
+}

@@ -45,6 +45,8 @@ export const elements = {
   orderDialogTitle: document.getElementById("order-dialog-title"),
   orderDialogBody: document.getElementById("order-dialog-body"),
   orderDialogClose: document.getElementById("order-dialog-close"),
+  topProducts: document.getElementById("top-products"),
+  lowStock: document.getElementById("low-stock"),
 };
 
 // How each stat card shows its number
@@ -443,4 +445,71 @@ export function showOrderDialog(order, details) {
 
 export function closeOrderDialog() {
   elements.orderDialog.close();
+}
+
+// ===== Product lists =====
+// One row, used by BOTH lists: (rank) photo, name, a line under it, and a
+// value on the right. Writing it once means the two lists can't drift apart.
+//   rank: 1, 2, 3... or null for no number
+function productRow({ rank = null, product, meta, value, valueClass = "" }) {
+  const item = make("li", "product-row");
+  // Without a rank the grid still has 4 columns, so keep an empty cell
+  item.append(make("span", "product-row__rank", rank === null ? "" : String(rank)));
+
+  if (product.image) {
+    const photo = make("img", "product-row__photo");
+    photo.src = product.image;
+    photo.alt = "";
+    photo.width = 44;
+    photo.height = 44;
+    photo.loading = "lazy";
+    item.append(photo);
+  } else {
+    item.append(make("span", "product-row__photo order-line__photo--missing", "📦"));
+  }
+
+  const info = make("div", "");
+  info.append(make("p", "product-row__name", product.name), make("p", "product-row__meta", meta));
+  item.append(info, make("p", `product-row__value ${valueClass}`.trim(), value));
+  return item;
+}
+
+// A friendly line instead of an empty box
+function emptyRow(text) {
+  return make("li", "product-row__empty", text);
+}
+
+// rows: from topProducts()
+export function renderTopProducts(rows) {
+  elements.topProducts.replaceChildren(
+    ...(rows.length > 0
+      ? rows.map((row, i) =>
+          productRow({
+            rank: i + 1,
+            product: row.product,
+            meta: `${formatCount(row.unitsSold)} sold`,
+            value: formatMoney(row.salesCents),
+          })
+        )
+      : [emptyRow("No sales in this period.")])
+  );
+}
+
+// rows: from lowStock()
+export function renderLowStock(rows) {
+  elements.lowStock.replaceChildren(
+    ...(rows.length > 0
+      ? rows.map((row) =>
+          productRow({
+            product: row.product,
+            meta:
+              row.unitsSold > 0
+                ? `${formatCount(row.unitsSold)} sold in this period`
+                : "No sales in this period",
+            value: row.product.stock === 0 ? "Sold out" : `${row.product.stock} left`,
+            valueClass: "product-row__value--low",
+          })
+        )
+      : [emptyRow("Everything is well stocked.")])
+  );
 }

@@ -24,6 +24,7 @@ import {
   STATUS_ORDER,
 } from "./orders.js";
 import { paginate, pageNumbers } from "./pagination.js";
+import { topProducts, lowStock } from "./products.js";
 import { debounce } from "./utils.js";
 import {
   elements,
@@ -37,6 +38,8 @@ import {
   renderPagination,
   showOrderDialog,
   closeOrderDialog,
+  renderTopProducts,
+  renderLowStock,
   showLoadError,
 } from "./ui.js";
 
@@ -91,6 +94,8 @@ function render() {
   );
   renderRevenueChart(series, unit);
   renderCategoryChart(salesByCategory(inRange, data.categories));
+  renderTopProducts(topProducts(inRange, productsById, 5));
+  renderLowStock(lowStock(data.products, inRange));
 
   rangeOrders = inRange;
   renderOrders();
