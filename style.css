@@ -841,6 +841,11 @@ th[aria-sort="descending"] {
     transform: none;
     visibility: visible;
     box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.5);
+    /* Visible at once when opening. If visibility were animated here too,
+       the menu would count as hidden for the first moment, and JavaScript
+       couldn't move focus into it (hidden things can't take focus).
+       Closing still waits for the slide-out, using the rule above. */
+    transition: transform 0.25s ease, visibility 0s;
   }
 
   .topbar .topbar__menu {
@@ -994,4 +999,106 @@ th[aria-sort="descending"] {
   width: 44px;
   height: 44px;
   border-radius: var(--radius-small);
+}
+
+/* ===== Small screens: no scrolling behind the open menu ===== */
+body.no-scroll {
+  overflow: hidden;
+}
+
+/* Sections focused after following a sidebar link need no ring */
+.main section:focus {
+  outline: none;
+}
+
+/* ===== Phones: the orders table becomes a list of cards =====
+   A 6-column table doesn't fit 375px. Instead of making people scroll
+   sideways, each row becomes a small card, and each cell gets its column
+   name in front of it from data-label ("Total  $21.41"). */
+@media (max-width: 640px) {
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+    width: 100%;
+  }
+
+  /* The headings stay, as a row of sort buttons above the cards */
+  .table thead tr {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .table thead th {
+    padding: 0.3rem 0;
+    border: none;
+  }
+
+  /* "Items" can't be sorted, so it isn't needed up there */
+  .table thead th:not([aria-sort]) {
+    display: none;
+  }
+
+  .table tbody tr {
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+  }
+
+  .table tbody tr:hover {
+    background: none;
+  }
+
+  .table td {
+    display: grid;
+    grid-template-columns: 6rem 1fr;
+    gap: 0.5rem;
+    padding: 0.35rem 0;
+    border: none;
+    white-space: normal;
+    text-align: left !important;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    color: var(--color-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  /* Everything after the label stays in the right-hand column, including
+     the small second line (time, email, item count) */
+  .table td > * {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  /* The top bar wraps onto two rows on phones, so jumped-to sections need
+     to stop further down to clear it */
+  :root {
+    --topbar-height: 136px;
+  }
+
+  .orders__filters,
+  .orders__filters input,
+  .orders__filters select {
+    width: 100%;
+  }
+
+  .topbar {
+    gap: 0.75rem;
+  }
+
+  .range {
+    width: 100%;
+  }
+
+  .range__btn {
+    flex: 1;
+    padding-inline: 0.25rem;
+  }
 }

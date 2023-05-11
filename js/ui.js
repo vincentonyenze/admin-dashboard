@@ -47,6 +47,10 @@ export const elements = {
   orderDialogClose: document.getElementById("order-dialog-close"),
   topProducts: document.getElementById("top-products"),
   lowStock: document.getElementById("low-stock"),
+  sidebar: document.getElementById("sidebar"),
+  sidebarLinks: document.querySelectorAll(".sidebar__link"),
+  menuBtn: document.getElementById("menu-btn"),
+  topbar: document.querySelector(".topbar"),
 };
 
 // How each stat card shows its number
@@ -293,7 +297,15 @@ function createOrderRow(order) {
   total.className = "table__num";
   total.textContent = formatMoney(order.totalCents);
 
-  tr.append(idCell, date, customer, items, statusCell, total);
+  // On phones each row becomes a card, and each cell shows its column name
+  // in front of it ("Total $21.41"), read from data-label by the CSS
+  const columnNames = ["Order", "Date", "Customer", "Items", "Status", "Total"];
+  const cells = [idCell, date, customer, items, statusCell, total];
+  cells.forEach((cell, i) => {
+    cell.dataset.label = columnNames[i];
+  });
+
+  tr.append(...cells);
   return tr;
 }
 
@@ -512,4 +524,24 @@ export function renderLowStock(rows) {
         )
       : [emptyRow("Everything is well stocked.")])
   );
+}
+
+// ===== Sidebar menu (small screens) =====
+// While it's open it acts like a dialog: the rest of the page is made
+// inert (no clicks, no Tab, not read out), so focus can't wander behind it.
+export function setMenuOpen(isOpen) {
+  elements.sidebar.classList.toggle("sidebar--open", isOpen);
+  elements.menuBtn.setAttribute("aria-expanded", String(isOpen));
+  elements.menuBtn.setAttribute("aria-label", isOpen ? "Close menu" : "Open menu");
+  elements.topbar.inert = isOpen;
+  elements.main.inert = isOpen;
+  document.body.classList.toggle("no-scroll", isOpen);
+}
+
+// Highlight the sidebar link for the section you're looking at
+export function setCurrentLink(sectionId) {
+  for (const link of elements.sidebarLinks) {
+    if (link.getAttribute("href") === `#${sectionId}`) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  }
 }

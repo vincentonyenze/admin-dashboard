@@ -40,6 +40,8 @@ import {
   closeOrderDialog,
   renderTopProducts,
   renderLowStock,
+  setMenuOpen,
+  setCurrentLink,
   showLoadError,
 } from "./ui.js";
 
@@ -173,6 +175,77 @@ function handleDialogClick(event) {
   if (event.target === elements.orderDialog) closeOrderDialog();
 }
 
+// ===== Sidebar menu (small screens) =====
+// The same width as the CSS breakpoint where the sidebar becomes a menu
+const menuScreen = window.matchMedia("(max-width: 900px)");
+let isMenuOpen = false;
+
+function openMenu() {
+  isMenuOpen = true;
+  setMenuOpen(true);
+  elements.sidebarLinks[0].focus(); // into the menu
+}
+
+// returnFocus: false when the menu closes because the screen got wider,
+// or because a link was followed (focus then goes to that section)
+function closeMenu({ returnFocus = true } = {}) {
+  if (!isMenuOpen) return;
+  isMenuOpen = false;
+  setMenuOpen(false);
+  if (returnFocus) elements.menuBtn.focus();
+}
+
+function handleMenuKeydown(event) {
+  if (event.key === "Escape" && isMenuOpen) closeMenu();
+}
+
+// A tap on the darkened page outside the menu closes it
+function handleOutsideClick(event) {
+  if (!isMenuOpen) return;
+  if (elements.sidebar.contains(event.target) || elements.menuBtn.contains(event.target)) return;
+  closeMenu();
+}
+
+// Following a link: close the menu and move focus to that section, so
+// keyboard and screen reader users continue from there
+function handleSidebarLinkClick(event) {
+  const link = event.target.closest(".sidebar__link");
+  if (!link) return;
+  const section = document.querySelector(link.getAttribute("href"));
+  closeMenu({ returnFocus: false });
+  if (section) {
+    section.setAttribute("tabindex", "-1");
+    section.focus({ preventScroll: true });
+  }
+}
+
+// ===== Which section is on screen =====
+// An IntersectionObserver tells us when sections come into view, without
+// checking positions on every scroll. The sidebar link for the section
+// nearest the top of the screen is marked as current.
+function watchSections() {
+  const sections = [...elements.sidebarLinks]
+    .map((link) => document.querySelector(link.getAttribute("href")))
+    .filter(Boolean);
+  const visible = new Set();
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) visible.add(entry.target);
+        else visible.delete(entry.target);
+      }
+      // The first section (in page order) that's on screen
+      const current = sections.find((section) => visible.has(section));
+      if (current) setCurrentLink(current.id);
+    },
+    // Ignore the strip under the sticky top bar, and the bottom 40% of the
+    // screen, so a section only counts once it's really being looked at
+    { rootMargin: "-80px 0px -40% 0px" }
+  );
+  sections.forEach((section) => observer.observe(section));
+}
+
 // ===== The URL =====
 // Change some of the URL's settings, keeping the rest. An empty value is
 // left out, so the URL only holds what's actually chosen. replaceState:
@@ -247,6 +320,14 @@ elements.ordersFilters.addEventListener("submit", (event) => {
 });
 elements.ordersPagination.addEventListener("click", handlePageClick);
 elements.ordersBody.addEventListener("click", handleOrderClick);
+elements.menuBtn.addEventListener("click", () => (isMenuOpen ? closeMenu() : openMenu()));
+elements.sidebar.addEventListener("click", handleSidebarLinkClick);
+document.addEventListener("keydown", handleMenuKeydown);
+document.addEventListener("click", handleOutsideClick);
+menuScreen.addEventListener("change", () => {
+  if (!menuScreen.matches) closeMenu({ returnFocus: false });
+});
+watchSections();
 elements.orderDialog.addEventListener("click", handleDialogClick);
 elements.orderDialogClose.addEventListener("click", closeOrderDialog);
 // Charts are drawn at their size on screen, so draw again when that
